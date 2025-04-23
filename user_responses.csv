@@ -1,6 +1,1 @@
 user_id,group_id,timestamp,preferred_cuisine,usual_eating_time,preferred_place,main_course,extra_treat,drink_choice,comfort_sip,dietary_preference
-user1,group1,2025-04-23 10:22:31,['Mexican'],Brunch,"['Diners', 'Cafes']","['Soup and Sandwiches', 'Noodles and Ramen']",['Bagels and Juice'],['Beer'],['Tea'],Vegan
-user2,group1,2025-04-23 10:23:50,['African'],Breakfast,['Lounges'],['Sushi and Ramen'],['Yogurt and Smoothies'],['Beer'],['Tea'],Vegan
-user3,group1,2025-04-23 10:24:48,['Italian'],Nightlife,['Diners'],['Chicken and Salad'],['Smoothies and Bagels'],['Beer'],['Tea'],No Preference
-user5,group1,2025-04-23 10:25:34,"['Latin', 'Mexican']",Nightlife,['Cafes'],"['Soup and Sandwiches', 'Noodles and Ramen']","['Yogurt and Smoothies', 'Bagels and Juice']",['None of the below'],['None of the below'],Non-Vegetarian
-user4,group1,2025-04-23 10:26:20,['Italian'],Brunch,"['Lounges', 'Diners']","['Soup and Sandwiches', 'Pizza and Wings']",['Smoothies and Bagels'],['Wine'],['Coffee'],No Preference
