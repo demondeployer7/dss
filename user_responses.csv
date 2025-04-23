@@ -1,3 +1,4 @@
 user_id,group_id,timestamp,preferred_cuisine,usual_eating_time,preferred_place,main_course,extra_treat,drink_choice,comfort_sip,dietary_preference
 user6,group2,2025-04-23 14:07:09,['Mexican'],Brunch,"['Lounges', 'Diners']","['Sushi and Ramen', 'Noodles and Ramen']",['Bagels and Juice'],"['Cocktail', 'Juice']",['Coffee'],Vegan
 user3,group1,2025-04-23 14:08:05,['Mexican'],Breakfast,['Cafes'],"['Chicken and Salad', 'Burgers and Pizza']","['Smoothies and Bagels', 'Bagels and Juice']",['None of the below'],['Coffee'],No Preference
+user7,group2,2025-04-23 14:09:18,"['African', 'Mexican']",Breakfast,"['Lounges', 'Cafes']","['Noodles and Ramen', 'Pizza and Wings']",['Bagels and Juice'],['Wine'],['Coffee'],Vegan
