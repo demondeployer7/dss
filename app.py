@@ -5,6 +5,60 @@ import math
 from datetime import datetime
 import ast
 import os
+import base64
+import requests
+import io
+
+# GitHub API Constants
+REPO_OWNER = "demondeployer7"  # Replace with your GitHub username
+REPO_NAME = "sample_deployment"  # Replace with your repository name
+GITHUB_TOKEN = st.secrets["github_token"]  # Make sure to add this in Streamlit secrets
+
+# File paths in GitHub repo
+USERS_CSV_PATH = "users.csv"
+RESPONSES_CSV_PATH = "user_responses.csv"
+RATINGS_CSV_PATH = "recommendation_ratings.csv"
+REVIEWS_CSV_PATH = "user_reviews.csv"
+
+def get_file_from_github(file_path):
+    """Fetch a file from GitHub repository."""
+    api_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    response = requests.get(api_url, headers=headers)
+
+    if response.status_code == 200:
+        content = response.json()
+        decoded = base64.b64decode(content["content"]).decode("utf-8")
+        sha = content["sha"]
+        return decoded, sha
+    elif response.status_code == 404:
+        # File doesn't exist yet, return empty content and None sha
+        return "", None
+    else:
+        st.error(f"❌ Failed to fetch {file_path} from GitHub (Status Code: {response.status_code})")
+        try:
+            error_message = response.json().get("message", "No message in response")
+            st.text(f"GitHub Error: {error_message}")
+        except Exception as e:
+            st.text(f"Could not parse GitHub response. Raw response:\n{response.text}")
+        return None, None
+
+def update_file_on_github(file_path, content, sha):
+    """Update a file on GitHub repository."""
+    api_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path}"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json"
+    }
+    encoded_content = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+    message = f"Update {file_path} via Streamlit app"
+    data = {
+        "message": message,
+        "content": encoded_content,
+        "sha": sha
+    }
+    response = requests.put(api_url, headers=headers, json=data)
+    return response.status_code == 200
 
 # Set page config
 st.set_page_config(
@@ -58,12 +112,28 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 def load_users():
-    return pd.read_csv('users.csv')
+    """Load users from GitHub repository."""
+    content, _ = get_file_from_github(USERS_CSV_PATH)
+    if content is None:
+        return pd.DataFrame(columns=['user_id', 'password', 'group_id'])
+    try:
+        return pd.read_csv(io.StringIO(content))
+    except pd.errors.EmptyDataError:
+        return pd.DataFrame(columns=['user_id', 'password', 'group_id'])
 
 def load_responses():
+    """Load user responses from GitHub repository."""
+    content, _ = get_file_from_github(RESPONSES_CSV_PATH)
+    if content is None:
+        return pd.DataFrame(columns=[
+            'user_id', 'group_id', 'timestamp',
+            'preferred_cuisine', 'usual_eating_time', 'preferred_place',
+            'main_course', 'extra_treat', 'drink_choice',
+            'comfort_sip', 'dietary_preference'
+        ])
     try:
-        return pd.read_csv('user_responses.csv')
-    except:
+        return pd.read_csv(io.StringIO(content))
+    except pd.errors.EmptyDataError:
         return pd.DataFrame(columns=[
             'user_id', 'group_id', 'timestamp',
             'preferred_cuisine', 'usual_eating_time', 'preferred_place',
@@ -71,11 +141,159 @@ def load_responses():
             'comfort_sip', 'dietary_preference'
         ])
 
-def validate_login(user_id, password):
-    users_df = load_users()
-    user = users_df[(users_df['user_id'] == user_id) & (users_df['password'] == password)]
-    return not user.empty, user.iloc[0]['group_id'] if not user.empty else None
+def save_response(user_id, group_id, responses_dict):
+    """Save user response to GitHub repository."""
+    responses = load_responses()
+    new_response = pd.DataFrame({
+        'user_id': [user_id],
+        'group_id': [group_id],
+        'timestamp': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+        'preferred_cuisine': [responses_dict['preferred_cuisine']],
+        'usual_eating_time': [responses_dict['usual_eating_time']],
+        'preferred_place': [responses_dict['preferred_place']],
+        'main_course': [responses_dict['main_course']],
+        'extra_treat': [responses_dict['extra_treat']],
+        'drink_choice': [responses_dict['drink_choice']],
+        'comfort_sip': [responses_dict['comfort_sip']],
+        'dietary_preference': [responses_dict['dietary_preference']]
+    })
+    responses = pd.concat([responses, new_response], ignore_index=True)
+    csv_str = responses.to_csv(index=False)
+    
+    # Get current file content and SHA
+    _, sha = get_file_from_github(RESPONSES_CSV_PATH)
+    if update_file_on_github(RESPONSES_CSV_PATH, csv_str, sha):
+        return True
+    else:
+        st.error("Failed to save response to GitHub")
+        return False
 
+def load_ratings():
+    """Load recommendation ratings from GitHub repository."""
+    content, _ = get_file_from_github(RATINGS_CSV_PATH)
+    if content is None:
+        return pd.DataFrame(columns=['user_id', 'group_id', 'recommendation', 'rating'])
+    try:
+        return pd.read_csv(io.StringIO(content))
+    except pd.errors.EmptyDataError:
+        return pd.DataFrame(columns=['user_id', 'group_id', 'recommendation', 'rating'])
+
+def save_rating(user_id, group_id, recommendation, rating):
+    """Save rating to GitHub repository."""
+    ratings = load_ratings()
+    
+    # Check for duplicate ratings
+    existing_rating = ratings[
+        (ratings['user_id'] == user_id) & 
+        (ratings['group_id'] == group_id) & 
+        (ratings['recommendation'] == recommendation)
+    ]
+    
+    if not existing_rating.empty:
+        st.warning("You have already rated this recommendation.")
+        return False
+    
+    new_rating = pd.DataFrame({
+        'user_id': [user_id],
+        'group_id': [group_id],
+        'recommendation': [recommendation],
+        'rating': [rating]
+    })
+    ratings = pd.concat([ratings, new_rating], ignore_index=True)
+    csv_str = ratings.to_csv(index=False)
+    
+    # Get current file content and SHA
+    _, sha = get_file_from_github(RATINGS_CSV_PATH)
+    if update_file_on_github(RATINGS_CSV_PATH, csv_str, sha):
+        return True
+    else:
+        st.error("Failed to save rating to GitHub")
+        return False
+
+def load_user_reviews():
+    """Load user reviews from GitHub repository."""
+    content, _ = get_file_from_github(REVIEWS_CSV_PATH)
+    if content is None:
+        return pd.DataFrame(columns=[
+            'user_id', 'group_id', 'top_3_recommendations',
+            'matched_interests', 'discovered_new_items', 'diverse_recommendations',
+            'easy_to_find', 'ideal_item_found', 'overall_satisfaction',
+            'confidence_in_decision', 'would_buy_recommendations'
+        ])
+    try:
+        return pd.read_csv(io.StringIO(content))
+    except pd.errors.EmptyDataError:
+        return pd.DataFrame(columns=[
+            'user_id', 'group_id', 'top_3_recommendations',
+            'matched_interests', 'discovered_new_items', 'diverse_recommendations',
+            'easy_to_find', 'ideal_item_found', 'overall_satisfaction',
+            'confidence_in_decision', 'would_buy_recommendations'
+        ])
+
+def save_user_review(user_id, group_id, top_3_recommendations, survey_responses):
+    """Save user review to GitHub repository."""
+    reviews = load_user_reviews()
+    new_review = pd.DataFrame({
+        'user_id': [user_id],
+        'group_id': [group_id],
+        'top_3_recommendations': [str(top_3_recommendations)],
+        'matched_interests': [survey_responses['matched_interests']],
+        'discovered_new_items': [survey_responses['discovered_new_items']],
+        'diverse_recommendations': [survey_responses['diverse_recommendations']],
+        'easy_to_find': [survey_responses['easy_to_find']],
+        'ideal_item_found': [survey_responses['ideal_item_found']],
+        'overall_satisfaction': [survey_responses['overall_satisfaction']],
+        'confidence_in_decision': [survey_responses['confidence_in_decision']],
+        'would_buy_recommendations': [survey_responses['would_buy_recommendations']]
+    })
+    reviews = pd.concat([reviews, new_review], ignore_index=True)
+    csv_str = reviews.to_csv(index=False)
+    
+    # Get current file content and SHA
+    _, sha = get_file_from_github(REVIEWS_CSV_PATH)
+    if update_file_on_github(REVIEWS_CSV_PATH, csv_str, sha):
+        return True
+    else:
+        st.error("Failed to save review to GitHub")
+        return False
+
+# Error handling for missing data files
+required_files = [
+    "Dominant_Categories.pkl",
+    "group_vectors_size_5.pkl",
+    "dominant_categories_list_reco_grop_size_5_reco_10",
+    "users.csv"
+]
+
+missing_files = [f for f in required_files if not os.path.exists(f)]
+if missing_files:
+    st.error(f"Missing required files: {', '.join(missing_files)}")
+    st.stop()
+
+# Load necessary data with error handling
+try:
+    with open("Dominant_Categories.pkl", "rb") as f:
+        Dominant_Categories = pickle.load(f)
+        Dominant_Categories = [ele.capitalize() for ele in Dominant_Categories]
+
+    with open("group_vectors_size_5.pkl", "rb") as f:
+        group_vectors = pickle.load(f)
+
+    with open("dominant_categories_list_reco_grop_size_5_reco_10", "rb") as f:
+        dominant_categories_list_reco = pickle.load(f)
+except Exception as e:
+    st.error(f"Error loading data files: {str(e)}")
+    st.stop()
+
+# Initialize session state
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+if 'user_id' not in st.session_state:
+    st.session_state.user_id = None
+if 'group_id' not in st.session_state:
+    st.session_state.group_id = None
+
+# Load/save user and response data
 def check_user_submission(user_id):
     responses = load_responses()
     return responses[responses['user_id'] == user_id].shape[0] > 0
@@ -115,104 +333,6 @@ def validate_survey_responses(responses):
             st.error(f"Please provide a valid rating (1-5) for {field.replace('_', ' ')}")
             return False
     return True
-
-# Error handling for missing data files
-required_files = [
-    "Dominant_Categories.pkl",
-    "group_vectors_size_5.pkl",
-    "dominant_categories_list_reco_grop_size_5_reco_10",
-    "users.csv"
-]
-
-missing_files = [f for f in required_files if not os.path.exists(f)]
-if missing_files:
-    st.error(f"Missing required files: {', '.join(missing_files)}")
-    st.stop()
-
-# Load necessary data with error handling
-try:
-    with open("Dominant_Categories.pkl", "rb") as f:
-        Dominant_Categories = pickle.load(f)
-        Dominant_Categories = [ele.capitalize() for ele in Dominant_Categories]
-
-    with open("group_vectors_size_5.pkl", "rb") as f:
-        group_vectors = pickle.load(f)
-
-    with open("dominant_categories_list_reco_grop_size_5_reco_10", "rb") as f:
-        dominant_categories_list_reco = pickle.load(f)
-except Exception as e:
-    st.error(f"Error loading data files: {str(e)}")
-    st.stop()
-
-# Initialize session state
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
-if 'user_id' not in st.session_state:
-    st.session_state.user_id = None
-if 'group_id' not in st.session_state:
-    st.session_state.group_id = None
-
-# Load/save user and response data
-def save_response(user_id, group_id, responses_dict):
-    responses = load_responses()
-    new_response = pd.DataFrame({
-        'user_id': [user_id],
-        'group_id': [group_id],
-        'timestamp': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
-        'preferred_cuisine': [responses_dict['preferred_cuisine']],
-        'usual_eating_time': [responses_dict['usual_eating_time']],
-        'preferred_place': [responses_dict['preferred_place']],
-        'main_course': [responses_dict['main_course']],
-        'extra_treat': [responses_dict['extra_treat']],
-        'drink_choice': [responses_dict['drink_choice']],
-        'comfort_sip': [responses_dict['comfort_sip']],
-        'dietary_preference': [responses_dict['dietary_preference']]
-    })
-    responses = pd.concat([responses, new_response], ignore_index=True)
-    responses.to_csv('user_responses.csv', index=False)
-
-def load_ratings():
-    try:
-        return pd.read_csv('recommendation_ratings.csv')
-    except:
-        return pd.DataFrame(columns=['user_id', 'group_id', 'recommendation', 'rating'])
-
-def save_rating(user_id, group_id, recommendation, rating):
-    ratings = load_ratings()
-    
-    # Check for duplicate ratings
-    existing_rating = ratings[
-        (ratings['user_id'] == user_id) & 
-        (ratings['group_id'] == group_id) & 
-        (ratings['recommendation'] == recommendation)
-    ]
-    
-    if not existing_rating.empty:
-        st.warning("You have already rated this recommendation.")
-        return False
-    
-    new_rating = pd.DataFrame({
-        'user_id': [user_id],
-        'group_id': [group_id],
-        'recommendation': [recommendation],
-        'rating': [rating]
-    })
-    ratings = pd.concat([ratings, new_rating], ignore_index=True)
-    ratings.to_csv('recommendation_ratings.csv', index=False)
-    return True
-
-def get_group_ratings(group_id):
-    ratings = load_ratings()
-    return ratings[ratings['group_id'] == group_id]
-
-def get_top_recommendations(group_id):
-    ratings = get_group_ratings(group_id)
-    if ratings.empty:
-        return None
-    
-    # Calculate average rating for each recommendation
-    avg_ratings = ratings.groupby('recommendation')['rating'].mean().sort_values(ascending=False)
-    return avg_ratings.head(3)
 
 # Vector similarity functions
 def list_to_frequency_vector(category_list, vector_size=122):
@@ -287,35 +407,6 @@ def get_recommendations(group_preferences):
         
     return recommendations
 
-def load_user_reviews():
-    try:
-        return pd.read_csv('user_reviews.csv')
-    except:
-        return pd.DataFrame(columns=[
-            'user_id', 'group_id', 'top_3_recommendations',
-            'matched_interests', 'discovered_new_items', 'diverse_recommendations',
-            'easy_to_find', 'ideal_item_found', 'overall_satisfaction',
-            'confidence_in_decision', 'would_buy_recommendations'
-        ])
-
-def save_user_review(user_id, group_id, top_3_recommendations, survey_responses):
-    reviews = load_user_reviews()
-    new_review = pd.DataFrame({
-        'user_id': [user_id],
-        'group_id': [group_id],
-        'top_3_recommendations': [str(top_3_recommendations)],
-        'matched_interests': [survey_responses['matched_interests']],
-        'discovered_new_items': [survey_responses['discovered_new_items']],
-        'diverse_recommendations': [survey_responses['diverse_recommendations']],
-        'easy_to_find': [survey_responses['easy_to_find']],
-        'ideal_item_found': [survey_responses['ideal_item_found']],
-        'overall_satisfaction': [survey_responses['overall_satisfaction']],
-        'confidence_in_decision': [survey_responses['confidence_in_decision']],
-        'would_buy_recommendations': [survey_responses['would_buy_recommendations']]
-    })
-    reviews = pd.concat([reviews, new_review], ignore_index=True)
-    reviews.to_csv('user_reviews.csv', index=False)
-
 def initialize_user_reviews_csv():
     try:
         # Try to read the file to check if it exists
@@ -364,11 +455,12 @@ if not st.session_state.logged_in:
         if not user_id or not password:
             st.error("Please enter both User ID and Password")
         else:
-            is_valid, group_id = validate_login(user_id, password)
-            if is_valid:
+            users_df = load_users()
+            user = users_df[(users_df['user_id'] == user_id) & (users_df['password'] == password)]
+            if not user.empty:
                 st.session_state.logged_in = True
                 st.session_state.user_id = user_id
-                st.session_state.group_id = group_id
+                st.session_state.group_id = user.iloc[0]['group_id']
                 st.session_state.last_activity = datetime.now()
                 st.success('Login successful!')
                 st.rerun()
@@ -496,9 +588,9 @@ st.markdown("""
                     for key in processed_response_data:
                         if isinstance(processed_response_data[key], list):
                             processed_response_data[key] = str(processed_response_data[key])
-                    save_response(st.session_state.user_id, st.session_state.group_id, processed_response_data)
-                    st.markdown('<div style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 5px;">Preferences submitted successfully!</div>', unsafe_allow_html=True)
-                    st.rerun()
+                    if save_response(st.session_state.user_id, st.session_state.group_id, processed_response_data):
+                        st.markdown('<div style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 5px;">Preferences submitted successfully!</div>', unsafe_allow_html=True)
+                        st.rerun()
                 else:
                     st.markdown('<div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">Please make a selection for each field.</div>', unsafe_allow_html=True)
             else:
@@ -531,8 +623,9 @@ st.markdown("""
         recommendations = get_recommendations(group_preferences)
         
         # Check if user has already rated
-        user_ratings = get_group_ratings(st.session_state.group_id)
-        user_rated = user_ratings[user_ratings['user_id'] == st.session_state.user_id].shape[0] > 0
+        ratings = load_ratings()
+        user_ratings = ratings[ratings['user_id'] == st.session_state.user_id]
+        user_rated = not user_ratings.empty
         
         if not user_rated:
             # Show recommendations first
@@ -579,7 +672,7 @@ st.markdown("""
                     st.markdown('<div style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 5px;">All ratings submitted successfully!</div>', unsafe_allow_html=True)
                     
                     # Check if all group members have rated
-                    group_ratings = get_group_ratings(st.session_state.group_id)
+                    group_ratings = load_ratings()
                     unique_users_rated = group_ratings['user_id'].nunique()
                     
                     # Add refresh button for rating status
@@ -602,7 +695,7 @@ st.markdown("""
                     st.markdown('<div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">Please rate all recommendations before submitting.</div>', unsafe_allow_html=True)
         else:
             # Check if all group members have rated
-            group_ratings = get_group_ratings(st.session_state.group_id)
+            group_ratings = load_ratings()
             unique_users_rated = group_ratings['user_id'].nunique()
             
             # Add refresh button for rating status
@@ -617,9 +710,9 @@ st.markdown("""
                 if st.button("🔄 Refresh Top Recommendations", key="refresh_top_recommendations"):
                     st.rerun()
                 
-                top_recommendations = get_top_recommendations(st.session_state.group_id)
+                top_recommendations = load_ratings().groupby('recommendation')['rating'].mean().sort_values(ascending=False).head(3)
                 
-                if top_recommendations is not None and not top_recommendations.empty:
+                if not top_recommendations.empty:
                     # Display top 3 recommendations with visual indicators
                     st.markdown("<h3 style='color: #2c3e50;'>Your Group's Top Choices</h3>", unsafe_allow_html=True)
                     
@@ -652,7 +745,7 @@ st.markdown("""
                     
                     # Check if user has already submitted the survey
                     reviews = load_user_reviews()
-                    user_reviewed = reviews[reviews['user_id'] == st.session_state.user_id].shape[0] > 0
+                    user_reviewed = not reviews[reviews['user_id'] == st.session_state.user_id].empty
                     
                     if not user_reviewed:
                         st.markdown("<h2 style='color: #34495e;'>📝 Feedback Survey</h2>", unsafe_allow_html=True)
@@ -703,17 +796,17 @@ st.markdown("""
                         
                         if st.button("Submit Feedback", key="submit_feedback"):
                             if validate_survey_responses(survey_responses):
-                                save_user_review(
+                                if save_user_review(
                                     st.session_state.user_id,
                                     st.session_state.group_id,
                                     list(top_recommendations.keys()),
                                     survey_responses
-                                )
-                                st.markdown('<div style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 5px;">Thank you for your feedback! You can now logout.</div>', unsafe_allow_html=True)
-                                st.session_state.logged_in = False
-                                st.session_state.user_id = None
-                                st.session_state.group_id = None
-                                st.rerun()
+                                ):
+                                    st.markdown('<div style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 5px;">Thank you for your feedback! You can now logout.</div>', unsafe_allow_html=True)
+                                    st.session_state.logged_in = False
+                                    st.session_state.user_id = None
+                                    st.session_state.group_id = None
+                                    st.rerun()
                             else:
                                 st.markdown('<div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">Please provide valid ratings for all questions.</div>', unsafe_allow_html=True)
                     else:
