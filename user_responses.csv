@@ -1,1 +1,2 @@
 user_id,group_id,timestamp,preferred_cuisine,usual_eating_time,preferred_place,main_course,extra_treat,drink_choice,comfort_sip,dietary_preference
+user6,group2,2025-04-23 14:07:09,['Mexican'],Brunch,"['Lounges', 'Diners']","['Sushi and Ramen', 'Noodles and Ramen']",['Bagels and Juice'],"['Cocktail', 'Juice']",['Coffee'],Vegan
