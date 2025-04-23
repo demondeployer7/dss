@@ -3,3 +3,4 @@ user6,group2,2025-04-23 14:07:09,['Mexican'],Brunch,"['Lounges', 'Diners']","['S
 user3,group1,2025-04-23 14:08:05,['Mexican'],Breakfast,['Cafes'],"['Chicken and Salad', 'Burgers and Pizza']","['Smoothies and Bagels', 'Bagels and Juice']",['None of the below'],['Coffee'],No Preference
 user7,group2,2025-04-23 14:09:18,"['African', 'Mexican']",Breakfast,"['Lounges', 'Cafes']","['Noodles and Ramen', 'Pizza and Wings']",['Bagels and Juice'],['Wine'],['Coffee'],Vegan
 user8,group2,2025-04-23 14:10:11,['Latin'],Brunch,['Buffets'],['Noodles and Ramen'],['Bagels and Juice'],['Wine'],['Tea'],Vegan
+user9,group2,2025-04-23 14:11:10,"['Latin', 'African']",Breakfast,['Pubs'],"['Noodles and Ramen', 'Burgers and Pizza', 'Chicken and Salad', 'Soup and Sandwiches', 'Poke and Salad', 'Tacos and Chips']","['Yogurt and Smoothies', 'Bagels and Juice', 'Smoothies and Bagels']","['Beer', 'Wine', 'Juice']","['Coffee', 'Tea']",Vegetarian
