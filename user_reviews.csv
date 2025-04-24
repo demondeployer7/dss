@@ -1,2 +1,2 @@
-user_id,group_id,top_3_recommendations,matched_interests,discovered_new_items,diverse_recommendations,easy_to_find,ideal_item_found,overall_satisfaction,confidence_in_decision,would_buy_recommendations
-
+user_id,group_id,top_3_recommendations,matched_interests,discovered_new_items,diverse_recommendations,easy_to_find,ideal_item_found,overall_satisfaction,confidence_in_decision,would_buy_recommendations,good_group_suggestions,convinced_of_items,confident_will_like,trust_in_recommender
+user1,group1,"['5p4p5DknrjuxIUDokYZE9w', 'GhY-NvTYa-DT-xHfc-7Dgw', 'YSRM9nWQn40eg49tSiI-_Q', 'acLymxN18Y83rxKbmaCm4Q', 'eN-Zrz1orLoqIb7D6mUMbg']",3,3,3,3,3,3,3,3,3.0,3.0,3.0,3.0
