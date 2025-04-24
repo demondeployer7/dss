@@ -1,6 +1,1 @@
 user_id,group_id,timestamp,preferred_cuisine,usual_eating_time,preferred_place,main_course,extra_treat,drink_choice,comfort_sip,dietary_preference
-user1,group1,2025-04-24 11:08:40,['African'],Breakfast,['Pubs'],['Pizza and Wings'],['Smoothies and Bagels'],['Juice'],['Coffee'],Vegan
-user2,group1,2025-04-24 11:10:35,['African'],Breakfast,['Lounges'],['Burgers and Pizza'],['Bagels and Juice'],['Beer'],['Coffee'],Vegan
-user3,group1,2025-04-24 11:11:23,['Mexican'],Breakfast,['Cafes'],['Soup and Sandwiches'],['Yogurt and Smoothies'],['Wine'],['Tea'],Vegan
-user4,group1,2025-04-24 11:12:02,['African'],Breakfast,['Pubs'],['Noodles and Ramen'],['Yogurt and Smoothies'],['Cocktail'],['Tea'],Vegan
-user5,group1,2025-04-24 11:12:43,['Latin'],Breakfast,['Lounges'],['Pizza and Wings'],['Yogurt and Smoothies'],['Beer'],['Coffee'],Vegan
