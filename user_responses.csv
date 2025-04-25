@@ -2,3 +2,4 @@ user_id,group_id,timestamp,preferred_cuisine,usual_eating_time,preferred_place,m
 user12,group3,2025-04-25 14:11:01,"['Indian', 'Mexican', 'Soul']",Breakfast,"['Cafes', 'Bars']","['Chicken and Salad', 'Pizza and Wings']","['Desserts', 'Smoothies and Bagels']","['Beer', 'Cocktail']",['Coffee'],Non-Vegetarian
 user13,group3,2025-04-25 14:11:05,['Latin'],Breakfast,['Pubs'],['Sushi and Ramen'],['Bagels and Juice'],['Beer'],['Tea'],Vegan
 user11,group3,2025-04-25 14:11:06,"['Indian', 'Chinese', 'Italian']",Nightlife,"['Cafes', 'Diners', 'Buffets', 'Street Food Stalls']","['Burgers and Pizza', 'Tacos and Chips']",['None of the below'],['Juice'],['Coffee'],Vegetarian
+user14,group3,2025-04-25 14:12:00,['Mexican'],Breakfast,['Lounges'],['Pizza and Wings'],['Yogurt and Smoothies'],['Juice'],['Coffee'],Vegan
