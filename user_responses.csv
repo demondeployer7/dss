@@ -7,3 +7,4 @@ user7,group2,2025-04-26 09:11:03,['Indian'],Nightlife,['Street Food Stalls'],['B
 user4,group1,2025-04-26 09:11:11,"['Thai', 'Mexican']",Breakfast,"['Diners', 'Buffets', 'Bars']","['Burgers and Pizza', 'Soup and Sandwiches']",['Desserts'],"['Beer', 'Wine', 'Cocktail', 'Juice']",['Tea'],Vegetarian
 user3,group1,2025-04-26 09:11:16,"['Pakistani', 'Indian']",Nightlife,"['Diners', 'Restaurants']","['Pizza and Wings', 'Chicken and Salad', 'Fish and Chips']",['Desserts'],['Juice'],"['Coffee', 'Tea']",No Preference
 user10,group2,2025-04-26 09:11:26,"['Mediterranean', 'Indian', 'Thai']",Nightlife,"['Restaurants', 'Cafes']","['Soup and Noodles', 'Soup and Sandwiches', 'Tacos and Chips']","['Desserts', 'Yogurt and Smoothies']",['Juice'],['Coffee'],Vegetarian
+user6,group2,2025-04-26 09:11:32,['Indian'],Nightlife,"['Diners', 'Buffets']",['Tacos and Chips'],['Yogurt and Smoothies'],['Juice'],['None of the below'],Vegetarian
