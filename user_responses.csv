@@ -1,1 +1,2 @@
 user_id,group_id,timestamp,preferred_cuisine,usual_eating_time,preferred_place,main_course,extra_treat,drink_choice,comfort_sip,dietary_preference
+user1,group1,2025-04-26 09:10:10,"['Mediterranean', 'Asian']",Nightlife,"['Cafes', 'Street Food Stalls', 'Diners']","['Noodles and Ramen', 'Soup and Noodles', 'Burgers and Pizza']","['Desserts', 'Smoothies and Bagels']",['Juice'],['Coffee'],No Preference
