@@ -1,1 +1,2 @@
 user_id,group_id,top_3_recommendations,matched_interests,discovered_new_items,diverse_recommendations,easy_to_find,ideal_item_found,overall_satisfaction,confidence_in_decision,would_buy_recommendations,good_group_suggestions,convinced_of_items,confident_will_like,trust_in_recommender
+user5,group1,"['6pVVwtFmd7VBsgyFPHvU_w', 'SVXW9ufki_0JSFvS1hApwg', 'ZIwn-7d3JOBEmUb7ELMr7A']",3,3,3,3,3,4,3,3,3,4,2,3
