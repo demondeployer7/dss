@@ -1,2 +1,3 @@
 user_id,group_id,timestamp,preferred_cuisine,usual_eating_time,preferred_place,main_course,extra_treat,drink_choice,comfort_sip,dietary_preference
 user1,group1,2025-04-26 09:10:10,"['Mediterranean', 'Asian']",Nightlife,"['Cafes', 'Street Food Stalls', 'Diners']","['Noodles and Ramen', 'Soup and Noodles', 'Burgers and Pizza']","['Desserts', 'Smoothies and Bagels']",['Juice'],['Coffee'],No Preference
+user14,group3,2025-04-26 09:10:32,"['Italian', 'Chinese', 'Pakistani', 'Indian', 'Middle']",Nightlife,"['Diners', 'Restaurants', 'Cafes']","['Chicken and Salad', 'Fish and Chips', 'Pizza and Wings']","['Desserts', 'Smoothies and Bagels']","['Wine', 'Cocktail']",['Tea'],Non-Vegetarian
